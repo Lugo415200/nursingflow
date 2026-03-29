@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NursingFlow</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-decoration bg-one"></div>
+  <div class="bg-decoration bg-two"></div>
+  <div class="bg-decoration bg-three"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-badge">Study Mode</div>
+      <h1>NursingFlow</h1>
+      <p class="subtitle">Learn the material, then test recall</p>
+    </header>
+
+    <main class="main-card">
+      <section id="homeView">
+        <div class="carousel-layout">
+          <aside class="module-rail">
+            <div class="rail-header">
+              <h2>Modules</h2>
+              <p class="rail-subtitle">Track progress and jump between medications</p>
+            </div>
+
+            <div id="moduleRailList" class="module-rail-list"></div>
+          </aside>
+
+          <section class="carousel-stage">
+            <div class="carousel-topbar">
+              <div>
+                <h2 class="stage-title">Featured Module</h2>
+                <p class="stage-subtitle">Use the rail or arrows to move through medications</p>
+              </div>
+
+              <div class="carousel-controls">
+                <button id="prevModuleBtn" class="secondary icon-btn" type="button" aria-label="Previous module">←</button>
+                <button id="nextModuleBtn" class="secondary icon-btn" type="button" aria-label="Next module">→</button>
+              </div>
+            </div>
+
+            <div id="carouselViewport" class="carousel-viewport">
+              <div id="carouselTrack" class="carousel-track"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="learnView" class="hidden">
+        <div class="view-header">
+          <h2>Study Module</h2>
+          <button id="backHomeFromLearn" class="secondary">Back</button>
+        </div>
+
+        <div class="learn-hero card-pop">
+          <div class="learn-hero-top">
+            <div>
+              <p id="learnLabel" class="module-label">Antiemetics</p>
+              <h2 id="learnTitle" class="learn-title">Ondansetron (Zofran)</h2>
+              <p id="learnCategory" class="muted learn-category">Serotonin 5-HT3 Receptor Antagonist</p>
+            </div>
+
+            <div class="learn-status-pill">
+              Study Mode
+            </div>
+          </div>
+
+          <p id="overview" class="learn-overview"></p>
+
+          <div class="learn-chip-row">
+            <div class="learn-chip">
+              <span class="learn-chip-label">Class</span>
+              <strong id="drugClass"></strong>
+            </div>
+            <div class="learn-chip">
+              <span class="learn-chip-label">Difficulty</span>
+              <strong id="learnDifficulty"></strong>
+            </div>
+            <div class="learn-chip">
+              <span class="learn-chip-label">Focus</span>
+              <strong>Study + Quiz</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="memory-panel card-pop">
+  <div class="group-heading">
+    <h3>High-Yield Memory Sheet</h3>
+    <span class="group-badge">Memorize first</span>
+  </div>
+
+  <div class="memory-grid">
+    <div class="memory-item">
+      <span class="memory-label">Main Use</span>
+      <strong id="memoryUse"></strong>
+    </div>
+
+    <div class="memory-item">
+      <span class="memory-label">Key Side Effect</span>
+      <strong id="memorySideEffect"></strong>
+    </div>
+
+    <div class="memory-item">
+      <span class="memory-label">Major Adverse Effect</span>
+      <strong id="memoryAdverse"></strong>
+    </div>
+
+    <div class="memory-item">
+      <span class="memory-label">Top Teaching Point</span>
+      <strong id="memoryTeaching"></strong>
+    </div>
+  </div>
+</div>
+
+
+        <div class="learn-groups">
+          <div class="learn-group card-pop">
+            <div class="group-heading">
+              <h3>Basics</h3>
+              <span class="group-badge">Know this first</span>
+            </div>
+
+            <div class="study-grid grouped-grid">
+              <div class="study-block">
+                <h3>Action</h3>
+                <p id="action"></p>
+              </div>
+
+              <div class="study-block">
+                <h3>Therapeutic Use</h3>
+                <ul id="therapeuticUse"></ul>
+              </div>
+
+              <div class="study-block">
+                <h3>Administration</h3>
+                <ul id="administration"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="learn-group card-pop">
+            <div class="group-heading">
+              <h3>Safe Use</h3>
+              <span class="group-badge">Watch closely</span>
+            </div>
+
+            <div class="study-grid grouped-grid">
+              <div class="study-block">
+                <h3>Nursing Assessment</h3>
+                <ul id="nursingAssessment"></ul>
+              </div>
+
+              <div class="study-block">
+                <h3>Side Effects</h3>
+                <ul id="sideEffects"></ul>
+              </div>
+
+              <div class="study-block">
+                <h3>Adverse Effects</h3>
+                <ul id="adverseEffects"></ul>
+              </div>
+
+              <div class="study-block">
+                <h3>Contraindications</h3>
+                <ul id="contraindications"></ul>
+              </div>
+
+              <div class="study-block">
+                <h3>Interactions</h3>
+                <ul id="interactions"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="learn-group card-pop">
+            <div class="group-heading">
+              <h3>Teaching & Outcome</h3>
+              <span class="group-badge">Client-facing points</span>
+            </div>
+
+            <div class="study-grid grouped-grid">
+              <div class="study-block">
+                <h3>Client Teaching</h3>
+                <ul id="clientTeaching"></ul>
+              </div>
+
+              <div class="study-block">
+                <h3>Medication Outcome</h3>
+                <p id="outcomes"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-action">
+          <button id="startQuizFromLearn">Quiz Me On This</button>
+        </div>
+      </section>
+
+      <section id="quizView" class="hidden">
+        <div class="view-header">
+          <h2>Quiz Mode</h2>
+          <button id="backHomeFromQuiz" class="secondary">Back</button>
+        </div>
+
+        <div class="quiz-topline">
+          <p id="questionCounter">Question 1 of 1</p>
+          <p id="scoreText">Score: 0</p>
+        </div>
+
+        <div class="question-card card-pop">
+          <h3 id="questionText">Question text</h3>
+          <div id="answersContainer" class="answers-container"></div>
+        </div>
+
+        <div id="feedbackBox" class="feedback-box hidden">
+          <p id="feedbackText" class="feedback-title"></p>
+          <p id="explanationText"></p>
+          <button id="nextBtn">Next</button>
+        </div>
+      </section>
+
+      <section id="resultView" class="hidden">
+        <h2>Quiz Complete</h2>
+        <p id="finalScore"></p>
+        <div class="button-row">
+          <button id="retryBtn">Try Again</button>
+          <button id="goHomeBtn" class="secondary">Home</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="modules.js"></script>
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
