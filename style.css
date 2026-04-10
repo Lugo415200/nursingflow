@@ -1087,3 +1087,39 @@ button:disabled {
 .memory-item:nth-child(2) { border-left: 4px solid #c4b5fd; }
 .memory-item:nth-child(3) { border-left: 4px solid #93c5fd; }
 .memory-item:nth-child(4) { border-left: 4px solid #86efac; }
+
+.import-panel {
+  margin-bottom: 22px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(196, 181, 253, 0.24);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.import-copy {
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.import-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+#importPanel input[type="file"],
+#importPanel button {
+  max-width: 100%;
+}
+
+.upload-status {
+  margin: 12px 0 0;
+  min-height: 24px;
+}
+
+#pdfUploadInput {
+  padding: 10px 0;
+}
