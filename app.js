@@ -48,6 +48,10 @@ const memorySideEffect = document.getElementById("memorySideEffect");
 const memoryAdverse = document.getElementById("memoryAdverse");
 const memoryTeaching = document.getElementById("memoryTeaching");
 
+const pdfUploadInput = document.getElementById("pdfUploadInput");
+const generateQuizBtn = document.getElementById("generateQuizBtn");
+const uploadStatus = document.getElementById("uploadStatus");
+
 let activeModule = modules[0] || null;
 let activeModuleIndex = 0;
 let currentQuizQuestions = [];
@@ -58,6 +62,7 @@ let pointerCurrentX = 0;
 let isDraggingCarousel = false;
 let dragLocked = false;
 
+const QUIZ_API_URL = "https://zniarnkpliwasjpdgpuo.supabase.co/functions/v1/generate-quiz";
 const STORAGE_KEY = "nursingflow_progress_v1";
 
 backHomeFromLearn.addEventListener("click", showHome);
@@ -113,34 +118,41 @@ function openLearnView() {
 }
 
 function renderStudyModule(module) {
-  learnLabel.textContent = module.label;
-  learnTitle.textContent = module.title;
-  learnCategory.textContent = module.category;
-  learnDifficulty.textContent = module.difficulty;
+  learnLabel.textContent = module.label || "Uploaded Guide";
+  learnTitle.textContent = module.title || "Generated Module";
+  learnCategory.textContent = module.category || "PDF Import";
+  learnDifficulty.textContent = module.difficulty || "Medium";
 
-  overview.textContent = module.overview;
-  drugClass.textContent = module.drugClass;
-  action.textContent = module.action;
-  outcomes.textContent = module.outcomes;
+  overview.textContent = module.overview || "";
+  drugClass.textContent = module.drugClass || "";
+  action.textContent = module.action || "Not identified in uploaded guide.";
+  outcomes.textContent = module.outcomes || "Not identified in uploaded guide.";
 
-  renderList(therapeuticUse, module.therapeuticUse);
-  renderList(nursingAssessment, module.nursingAssessment);
-  renderList(administration, module.administration);
-  renderList(sideEffects, module.sideEffects);
-  renderList(adverseEffects, module.adverseEffects);
-  renderList(contraindications, module.contraindications);
-  renderList(interactions, module.interactions);
-  renderList(clientTeaching, module.clientTeaching);
+  renderList(therapeuticUse, module.therapeuticUse || []);
+  renderList(nursingAssessment, module.nursingAssessment || []);
+  renderList(administration, module.administration || []);
+  renderList(sideEffects, module.sideEffects || []);
+  renderList(adverseEffects, module.adverseEffects || []);
+  renderList(contraindications, module.contraindications || []);
+  renderList(interactions, module.interactions || []);
+  renderList(clientTeaching, module.clientTeaching || []);
 
-    memoryUse.textContent = module.therapeuticUse?.[0] || "Review therapeutic use";
+  memoryUse.textContent = module.therapeuticUse?.[0] || "Review therapeutic use";
   memorySideEffect.textContent = module.sideEffects?.[0] || "Review side effects";
   memoryAdverse.textContent = module.adverseEffects?.[0] || "Review adverse effects";
   memoryTeaching.textContent = module.clientTeaching?.[0] || "Review client teaching";
-
 }
 
-function renderList(element, items) {
+function renderList(element, items, fallback = "Not identified in uploaded guide.") {
   element.innerHTML = "";
+
+  if (!items || !items.length) {
+    const li = document.createElement("li");
+    li.textContent = fallback;
+    element.appendChild(li);
+    return;
+  }
+
   items.forEach(item => {
     const li = document.createElement("li");
     li.textContent = item;
@@ -255,16 +267,16 @@ function renderCarouselCards() {
       <div class="module-left">
         <div class="card-topline">
           <div class="label-group">
-            <p class="module-label">${module.label}</p>
+            <p class="module-label">${module.label || "Uploaded Guide"}</p>
             <span class="status-badge">${statusText}</span>
           </div>
         </div>
 
-        <h3>${module.title}</h3>
-        <p class="muted">${module.category}</p>
+        <h3>${module.title || "Generated Module"}</h3>
+        <p class="muted">${module.category || "PDF Import"}</p>
 
         <p class="module-description">
-          ${module.overview}
+          ${module.overview || ""}
         </p>
 
         <div class="mini-stats">
@@ -274,7 +286,7 @@ function renderCarouselCards() {
           </div>
           <div class="mini-stat">
             <span class="mini-stat-label">Difficulty</span>
-            <strong>${module.difficulty}</strong>
+            <strong>${module.difficulty || "Medium"}</strong>
           </div>
           <div class="mini-stat">
             <span class="mini-stat-label">Best Score</span>
@@ -425,7 +437,9 @@ function updateNavButtons() {
 function startQuiz() {
   if (!activeModule) return;
 
-  currentQuizQuestions = questions.filter(q => q.moduleId === activeModule.id);
+  currentQuizQuestions = shuffleArray(
+  questions.filter(q => q.moduleId === activeModule.id)
+);
   currentQuestionIndex = 0;
   score = 0;
   scoreText.textContent = "Score: 0";
@@ -434,17 +448,28 @@ function startQuiz() {
   updateProgress(0);
 
   showOnly(quizView);
+
+  if (!currentQuizQuestions.length) {
+    questionCounter.textContent = "Question 0 of 0";
+    questionText.textContent = "No quiz questions are available for this module yet.";
+    answersContainer.innerHTML = "";
+    feedbackBox.classList.add("hidden");
+    return;
+  }
+
   showQuestion();
 }
 
 function showQuestion() {
   const currentQuestion = currentQuizQuestions[currentQuestionIndex];
+  if (!currentQuestion) return;
+
   questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${currentQuizQuestions.length}`;
   questionText.textContent = currentQuestion.question;
   answersContainer.innerHTML = "";
   feedbackBox.classList.add("hidden");
 
-  currentQuestion.answers.forEach(answer => {
+  (currentQuestion.answers || []).forEach(answer => {
     const button = document.createElement("button");
     button.textContent = answer;
     button.className = "answer-btn";
@@ -455,6 +480,8 @@ function showQuestion() {
 
 function handleAnswer(selectedAnswer) {
   const currentQuestion = currentQuizQuestions[currentQuestionIndex];
+  if (!currentQuestion) return;
+
   const allButtons = answersContainer.querySelectorAll("button");
 
   allButtons.forEach(button => {
@@ -480,10 +507,12 @@ function handleAnswer(selectedAnswer) {
   }
 
   scoreText.textContent = `Score: ${score}`;
-  explanationText.textContent = currentQuestion.explanation;
+  explanationText.textContent = currentQuestion.explanation || "";
   feedbackBox.classList.remove("hidden");
 
-  const progressPercent = Math.round((score / currentQuizQuestions.length) * 100);
+  const progressPercent = currentQuizQuestions.length
+    ? Math.round((score / currentQuizQuestions.length) * 100)
+    : 0;
   updateProgress(progressPercent);
 }
 
@@ -603,11 +632,319 @@ function handlePointerUp() {
   updateCarouselPosition();
 }
 
+generateQuizBtn?.addEventListener("click", handlePdfQuizGeneration);
+
+async function handlePdfQuizGeneration() {
+  const file = pdfUploadInput.files[0];
+
+  if (!file) {
+    uploadStatus.textContent = "Please choose a PDF first.";
+    return;
+  }
+
+  uploadStatus.textContent = "Processing PDF...";
+  generateQuizBtn.disabled = true;
+
+  try {
+    const pages = await extractPagesFromPdf(file);
+    const chunks = chunkPages(pages, 5);
+
+    let allModules = [];
+    let allQuestions = [];
+
+    for (let i = 0; i < chunks.length; i++) {
+      uploadStatus.textContent = `Processing chunk ${i + 1} / ${chunks.length}`;
+
+      const res = await fetch(QUIZ_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuaWFybmtwbGl3YXNqcGRncHVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTA2NDIsImV4cCI6MjA5MDU2NjY0Mn0.5Fo-FkMc4LKOQZoF0rJ2pHKTkT_r3aft6Z52RJ55Sow"
+        },
+        body: JSON.stringify({
+          chunkText: chunks[i].chunkText,
+          chunkIndex: i,
+          startPage: chunks[i].startPage,
+          endPage: chunks[i].endPage
+        })
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Chunk ${i + 1} failed: ${errorText}`);
+      }
+
+      const data = await res.json();
+
+      if (!Array.isArray(data.modules)) continue;
+
+      data.modules.forEach(m => {
+        if (m?.module) {
+          allModules.push(m.module);
+        }
+        if (Array.isArray(m?.questions)) {
+          allQuestions.push(...m.questions);
+        }
+      });
+    }
+
+    loadGeneratedModules(allModules, allQuestions);
+
+    uploadStatus.textContent = "Done!";
+  } catch (err) {
+    console.error(err);
+    uploadStatus.textContent = "Error processing PDF.";
+  } finally {
+    generateQuizBtn.disabled = false;
+  }
+}
+
+function loadGeneratedModules(modulesArr, questionsArr) {
+  let mergedModules = [...modules];
+
+  modulesArr.filter(isValidModule).forEach(newModule => {
+    let found = false;
+
+    for (let i = 0; i < mergedModules.length; i++) {
+      if (modulesMatch(mergedModules[i], newModule)) {
+        mergedModules[i] = mergeModuleData(mergedModules[i], newModule);
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      mergedModules.unshift({
+        ...newModule,
+        id: `uploaded-${Date.now()}-${Math.random()}`,
+        label: newModule.label || "Uploaded Guide",
+        category: newModule.category || "PDF Import",
+        difficulty: newModule.difficulty || "Medium",
+        overview: newModule.overview || "Generated from uploaded PDF.",
+        drugClass: newModule.drugClass || "",
+        action: newModule.action || "",
+        therapeuticUse: newModule.therapeuticUse || [],
+        nursingAssessment: newModule.nursingAssessment || [],
+        administration: newModule.administration || [],
+        sideEffects: newModule.sideEffects || [],
+        adverseEffects: newModule.adverseEffects || [],
+        contraindications: newModule.contraindications || [],
+        interactions: newModule.interactions || [],
+        clientTeaching: newModule.clientTeaching || [],
+        outcomes: newModule.outcomes || ""
+      });
+    }
+  });
+
+  modules.length = 0;
+  modules.push(...mergedModules);
+
+ const formattedQuestions = questionsArr
+  .filter(q => q?.question && Array.isArray(q?.answers) && q.answers.length === 4 && q?.correctAnswer)
+  .map(q => {
+    const matchedModule = modules.find(
+      m => normalizeText(m.title || "") === normalizeText(q.moduleTitle || "")
+    );
+
+    if (!matchedModule) return null;
+
+    // 🔥 Shuffle answers
+    const shuffledAnswers = shuffleArray(q.answers);
+
+    return {
+      moduleId: matchedModule.id,
+      question: q.question,
+      answers: shuffledAnswers,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation || ""
+    };
+  })
+  .filter(Boolean);
+
+  const dedupedQuestions = mergeQuestions(questions, formattedQuestions);
+
+  questions.length = 0;
+  questions.push(...dedupedQuestions);
+
+  activeModuleIndex = 0;
+  activeModule = modules[0] || null;
+
+  renderHomeCarousel();
+  if (activeModule) {
+    openLearnView();
+  }
+}
+
 window.addEventListener("resize", () => {
   if (!homeView.classList.contains("hidden")) {
     updateCarouselPosition();
   }
 });
+
+async function extractPagesFromPdf(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+
+  const pages = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+
+    const text = textContent.items.map(item => item.str || "").join(" ");
+
+    pages.push({
+      pageNumber: i,
+      text: cleanText(text)
+    });
+  }
+
+  return pages;
+}
+
+function cleanText(text) {
+  return text
+    .replace(/\s+/g, " ")
+    .replace(/Page \d+/gi, "")
+    .trim();
+}
+
+function chunkPages(pages, size = 5) {
+  const chunks = [];
+
+  for (let i = 0; i < pages.length; i += size) {
+    const slice = pages.slice(i, i + size);
+
+    chunks.push({
+      chunkText: slice.map(p => p.text).join("\n"),
+      startPage: slice[0].pageNumber,
+      endPage: slice[slice.length - 1].pageNumber
+    });
+  }
+
+  return chunks;
+}
+
+function normalizeText(s = "") {
+  return s
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeText(s = "") {
+  return s
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// ✅ ADD IT HERE
+function shuffleArray(array) {
+  const arr = [...array];
+
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  return arr;
+}
+
+function modulesMatch(a, b) {
+  const aNames = [a.title || "", ...(a.aliases || [])].map(normalizeText);
+  const bNames = [b.title || "", ...(b.aliases || [])].map(normalizeText);
+
+  return aNames.some(name => bNames.includes(name) && name.length > 2);
+}
+
+function mergeArrays(a = [], b = []) {
+  const map = new Map();
+
+  [...a, ...b].forEach(item => {
+    const clean = (item || "").trim();
+    if (!clean) return;
+
+    const key = normalizeText(clean);
+
+    if (!map.has(key) || clean.length > map.get(key).length) {
+      map.set(key, clean);
+    }
+  });
+
+  return [...map.values()];
+}
+
+function mergeModuleData(existing, incoming) {
+  return {
+    ...existing,
+    title: existing.title || incoming.title,
+    aliases: mergeArrays(existing.aliases, incoming.aliases),
+
+    label: existing.label || incoming.label || "Uploaded Guide",
+    category: existing.category || incoming.category || "PDF Import",
+    difficulty: existing.difficulty || incoming.difficulty || "Medium",
+
+    overview:
+      (existing.overview || "").length > (incoming.overview || "").length
+        ? existing.overview
+        : (incoming.overview || existing.overview || "Generated from uploaded PDF."),
+
+    drugClass: existing.drugClass || incoming.drugClass || "",
+
+    action:
+      (existing.action || "").length > (incoming.action || "").length
+        ? existing.action
+        : (incoming.action || existing.action || ""),
+
+    therapeuticUse: mergeArrays(existing.therapeuticUse, incoming.therapeuticUse),
+    nursingAssessment: mergeArrays(existing.nursingAssessment, incoming.nursingAssessment),
+    administration: mergeArrays(existing.administration, incoming.administration),
+    sideEffects: mergeArrays(existing.sideEffects, incoming.sideEffects),
+    adverseEffects: mergeArrays(existing.adverseEffects, incoming.adverseEffects),
+    contraindications: mergeArrays(existing.contraindications, incoming.contraindications),
+    interactions: mergeArrays(existing.interactions, incoming.interactions),
+    clientTeaching: mergeArrays(existing.clientTeaching, incoming.clientTeaching),
+
+    outcomes:
+      (existing.outcomes || "").length > (incoming.outcomes || "").length
+        ? existing.outcomes
+        : (incoming.outcomes || existing.outcomes || "")
+  };
+}
+
+function questionKey(q) {
+  return normalizeText((q.question || "") + (q.correctAnswer || ""));
+}
+
+function mergeQuestions(existing, incoming) {
+  const map = new Map();
+
+  [...existing, ...incoming].forEach(q => {
+    const key = questionKey(q);
+
+    if (!map.has(key)) {
+      map.set(key, q);
+    }
+  });
+
+  return [...map.values()];
+}
+
+function isValidModule(m) {
+  const populatedCount = [
+    m?.action,
+    m?.overview,
+    m?.drugClass,
+    ...(m?.therapeuticUse || []),
+    ...(m?.sideEffects || []),
+    ...(m?.adverseEffects || [])
+  ].filter(Boolean).length;
+
+  return Boolean(m?.title && m.title.length > 2 && populatedCount >= 3);
+}
 
 renderHomeCarousel();
 showOnly(homeView);
