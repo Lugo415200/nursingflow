@@ -28,6 +28,23 @@
 
     <main class="main-card">
       <section id="homeView">
+        <div class="import-panel card-pop">
+  <div class="group-heading">
+    <h3>Generate Quiz From PDF</h3>
+    <span class="group-badge">MVP</span>
+  </div>
+
+  <p class="import-copy">
+    Upload a study guide PDF and generate a draft quiz.
+  </p>
+
+  <div class="import-actions">
+    <input id="pdfUploadInput" type="file" accept=".pdf" />
+    <button id="generateQuizBtn" type="button">Generate Draft Quiz</button>
+  </div>
+
+  <p id="uploadStatus" class="upload-status muted"></p>
+</div>
         <div class="carousel-layout">
           <aside class="module-rail">
             <div class="rail-header">
@@ -243,8 +260,14 @@
     </main>
   </div>
 
-  <script src="modules.js"></script>
-  <script src="questions.js"></script>
-  <script src="app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+</script>
+
+<script src="modules.js"></script>
+<script src="questions.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
